@@ -1,0 +1,94 @@
+version: "1.0"
+
+forward-flows:
+  user-registration-flow:
+    description: "Flow đăng ký người dùng và gửi email xác nhận"
+    steps:
+      - name: "create-user"
+        command: "create-user.command"
+        onSuccess:
+          next: "send-welcome-email"
+          emit: "create-user.success"
+        onFailure:
+          next: "user-registration-rollback-flow"
+          emit: "create-user.failed"
+      
+      - name: "send-welcome-email"
+        command: "send-welcome-email.command"
+        onSuccess:
+          emit: "send-welcome-email.success"
+        onFailure:
+          emit: "send-welcome-email.failed"
+
+  order-payment-flow:
+    description: "Flow tạo đơn hàng, trừ tồn kho, thanh toán"
+    steps:
+      - name: "create-order"
+        command: "create-order.command"
+        onSuccess:
+          emit: "create-order.success"
+        onFailure:
+          next: "rollback-flow.order-payment-rollback-flow"
+          rollback: "rollback-flow.order-payment-rollback-flow"
+            # - "rollback-inventory"
+            # - "rollback-order"
+          emit: "create-order.failed"
+      
+      - name: "reserve-inventory"
+        command: "reserve-inventory.command"
+        fireAndForget:
+          - "log.inventoryReservationStarted"
+        onSuccess:
+          emit: "reserve-inventory.success"
+        onFailure:
+          rollback: "rollback-flow.order-payment-rollback-flow"
+          emit: "reserve-inventory.failed"
+
+      - name: "process-payment"
+        dependsOn: 
+          - "reserve-inventory"
+          - "create-order"
+        command: "process-payment.command"
+        onSuccess:
+          emit: "process-payment.success"
+        onFailure:
+          rollback: "rollback-flow.order-payment-rollback-flow"
+          emit: "process-payment.failed"
+
+rollback-flows:
+  user-registration-rollback-flow:
+    description: "Flow hoàn tác đăng ký người dùng"
+    steps:
+      - name: "rollback-user"
+        command: "rollback-user.command"
+        onSuccess:
+         emit: "rollback-user.success"
+        onFailure:
+         emit: "rollback-user.failed"
+    
+  order-payment-rollback-flow:
+    description: "Flow hoàn tác đơn hàng và tồn kho"
+    steps:
+      - name: "rollback-inventory"
+        dependsOn: "reserve-inventory"
+        command: "rollback-inventory.command"
+        onSuccess:
+          emit: "rollback-inventory.success"
+        onFailure:
+          emit: "rollback-inventory.failed"
+
+      - name: "rollback-order"
+        dependsOn: "create-order"
+        command: "rollback-order.command"
+        onSuccess:
+          emit: "rollback-order.success"
+        onFailure:
+          emit: "rollback-order.failed"
+
+      - name: "rollback-payment"
+        dependsOn: "process-payment"
+        command: "rollback-payment.command"
+        onSuccess:
+          emit: "rollback-payment.success"
+        onFailure:
+          emit: "rollback-payment.failed"

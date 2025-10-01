@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Architecture_1.Common\Architecture_1.Common.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<!-- 🔹 Authentication & Authorization -->
+		<PackageReference Include="Duende.IdentityServer" Version="7.2.3" />
+		<PackageReference Include="Duende.IdentityServer.EntityFramework" Version="7.2.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.0" />
+
+		<!-- 🔹 Entity Framework Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+
+		<!-- 🔹 API & GraphQL -->
+		<PackageReference Include="GraphQL.Server.Ui.Playground" Version="8.2.0" />
+		<PackageReference Include="HotChocolate.AspNetCore" Version="15.0.3" />
+		<PackageReference Include="HotChocolate.AspNetCore.Playground" Version="10.5.5" />
+		<PackageReference Include="HotChocolate.Data" Version="15.0.3" />
+
+		<!-- 🔹 Background Jobs -->
+		<PackageReference Include="Hangfire" Version="1.8.18" />
+
+		<!-- 🔹 JSON Processing -->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.13" />
+
+		<!-- 🔹 SignalR -->
+		<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+
+		<!-- 🔹 Google API -->
+		<PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+
+		<!-- 🔹 Azure & Docker -->
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Data\" />
+	  <Folder Include="Migrations\ConfigurationDb\" />
+	  <Folder Include="Migrations\PersistedGrantDb\" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,120 @@
+version: "1.0"
+
+flows:
+    order-payment-flow:
+      topic: "saga-orchestration"
+      description: "Flow tạo đơn hàng, trừ tồn kho, thanh toán"
+      steps:
+        - name: "create-order"
+          topic: "order-command"
+          onSuccess:
+            emit: "create-order.success"
+            topic: "order-event"
+            nextSteps:
+              - name: "reserve-inventory"
+                topic: "order-command"
+              - name: "verify-user"
+                topic: "user-command"
+            nextFlows: []
+          onFailure:
+            emit: "create-order.failed"
+            topic: "order-event"
+            nextSteps: 
+              - name: "create-order.rollback"
+                topic: "order-command"
+            nextFlows: []
+
+        - name: "reserve-inventory"
+          topic: "product-command"
+          onSuccess:
+            emit: "reserve-inventory.success"
+            topic: "product-event"
+            nextSteps: 
+              - name: "process-payment"
+                topic: "payment-command"
+            nextFlows: "user-notification-flow"
+          onFailure:
+            emit: "reserve-inventory.failed"
+            topic: "product-command"
+            nextSteps:
+              - name: "create-order.rollback"
+                topic: "order-event"
+              - name: "reserve-inventory.rollback"
+                topic: "product-event"
+            nextFlows: []
+
+        - name: "process-payment"
+          topic: "payment-command"
+          onSuccess:
+            emit: "process-payment.success"
+            topic: "payment-event"
+            nextSteps: []
+            nextFlows: []
+          onFailure:
+            emit: "process-payment.failed"
+            topic: "payment-event"
+            nextSteps: []
+            nextFlows: "order-payment-rollback-flow"
+
+    user-notification-flow:
+      topic: "saga-orchestration"
+      description: "Flow gửi thông báo đến người dùng"
+      steps:
+        - name: "verify-user"
+          topic: "user-command"
+          onSuccess:
+            emit: "verify-user.success"
+            topic: "user-event"
+            nextSteps:
+            nextFlows: 
+          onFailure:
+            emit: "verify-user.failed"
+            topic: "user-event"
+            nextSteps:
+            nextFlows:
+
+    order-payment-rollback-flow:
+      topic: "saga-orchestration"
+      description: "Flow hoàn tác đơn hàng và tồn kho"
+      steps:
+        - name: "rollback-order"
+          topic: "order-command"
+          onSuccess:
+            emit: "rollback-order.success"
+            topic: "order-event"
+            nextSteps: 
+              - name: "rollback-inventory"
+                topic: "product-command"
+            nextFlows: 
+          onFailure:
+            emit: "rollback-order.failed"
+            topic: "order-event"
+            nextSteps:
+            nextFlows: 
+
+        - name: "rollback-inventory"
+          topic: "product-command"
+          onSuccess:
+            emit: "rollback-inventory.success"
+            nextSteps: 
+              - name: "rollback-payment"
+                topic: "payment-command"
+            nextFlows: 
+          onFailure:
+            emit: "rollback-inventory.failed"
+            topic: "product-event"
+            nextSteps:
+            nextFlows: 
+
+        - name: "rollback-payment"
+          topic: "payment-command"
+          onSuccess:
+            emit: "rollback-payment.success"
+            topic: "payment-event"
+            nextSteps:
+            nextFlows: 
+          onFailure:
+            emit: "rollback-payment.failed"
+            topic: "payment-event"
+            nextSteps:
+            nextFlows: 

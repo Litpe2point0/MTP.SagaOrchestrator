@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Architecture_1.Common\Architecture_1.Common.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.S3" Version="3.7.416" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.37" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.3" />
+		<PackageReference Include="FluentEmail.Core" Version="3.0.2" />
+		<PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
+		<PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+		<PackageReference Include="UnDotNet.BootstrapEmail" Version="1.1.2" />
+		<PackageReference Include="payOS" Version="1.0.9" />
+		<PackageReference Include="Consul" Version="1.7.14.7" />
+		<PackageReference Include="Confluent.Kafka" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
+	</ItemGroup>
+</Project>

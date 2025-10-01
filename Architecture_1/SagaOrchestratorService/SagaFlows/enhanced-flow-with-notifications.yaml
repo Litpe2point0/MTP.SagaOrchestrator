@@ -1,0 +1,141 @@
+version: "1.0"
+
+forward-flows:
+  user-registration-with-notification-flow:
+    description: "Complete user registration flow with email notification"
+    steps:
+      - name: "create-user"
+        command: "create-user.command"
+        onSuccess:
+          next: "send-welcome-email"
+          emit: "create-user.success"
+        onFailure:
+          rollback: "rollback-flow.user-registration-rollback-flow"
+          emit: "create-user.failed"
+      
+      - name: "send-welcome-email"
+        command: "send-welcome-email.command"
+        dependsOn:
+          - "create-user"
+        onSuccess:
+          emit: "send-welcome-email.success"
+        onFailure:
+          rollback: "rollback-flow.user-registration-rollback-flow"
+          emit: "send-welcome-email.failed"
+
+  complete-order-flow:
+    description: "Complete order flow with user, order, inventory, payment and notifications"
+    steps:
+      - name: "create-order"
+        command: "create-order.command"
+        onSuccess:
+          emit: "create-order.success"
+        onFailure:
+          rollback: "rollback-flow.complete-order-rollback-flow"
+          emit: "create-order.failed"
+      
+      - name: "reserve-inventory"
+        command: "reserve-inventory.command"
+        onSuccess:
+          emit: "reserve-inventory.success"
+        onFailure:
+          rollback: "rollback-flow.complete-order-rollback-flow"
+          emit: "reserve-inventory.failed"
+          
+      - name: "process-payment"
+        command: "process-payment.command"
+        dependsOn: 
+          - "reserve-inventory"
+          - "create-order"
+        onSuccess:
+          next: "send-order-confirmation"
+          emit: "process-payment.success"
+        onFailure:
+          rollback: "rollback-flow.complete-order-rollback-flow"
+          emit: "process-payment.failed"
+
+      - name: "send-order-confirmation"
+        command: "send-order-confirmation.command"
+        dependsOn:
+          - "process-payment"
+        onSuccess:
+          next: "activate-user"
+          emit: "send-order-confirmation.success"
+        onFailure:
+          emit: "send-order-confirmation.failed"
+
+      - name: "activate-user"
+        command: "activate-user.command"
+        dependsOn:
+          - "send-order-confirmation"
+        onSuccess:
+          emit: "activate-user.success"
+        onFailure:
+          emit: "activate-user.failed"
+
+  account-management-flow:
+    description: "Account management flow with notifications"
+    steps:
+      - name: "verify-user"
+        command: "verify-user.command"
+        onSuccess:
+          next: "send-verification-email"
+          emit: "verify-user.success"
+        onFailure:
+          emit: "verify-user.failed"
+
+      - name: "send-verification-email"
+        command: "send-welcome-email.command"
+        dependsOn:
+          - "verify-user"
+        onSuccess:
+          emit: "send-verification-email.success"
+        onFailure:
+          emit: "send-verification-email.failed"
+
+rollback-flows:
+  user-registration-rollback-flow:
+    description: "Rollback user registration and notifications"
+    steps:
+      - name: "rollback-user"
+        command: "rollback-user.command"
+        dependsOn: "create-user"
+        onSuccess:
+          emit: "rollback-user.success"
+        onFailure:
+          emit: "rollback-user.failed"
+    
+  complete-order-rollback-flow:
+    description: "Complete rollback for order, inventory, payment and user actions"
+    steps:
+      - name: "rollback-inventory"
+        command: "rollback-inventory.command"
+        dependsOn: "reserve-inventory"
+        onSuccess:
+          emit: "rollback-inventory.success"
+        onFailure:
+          emit: "rollback-inventory.failed"
+
+      - name: "rollback-order"
+        command: "rollback-order.command"
+        dependsOn: "create-order"
+        onSuccess:
+          emit: "rollback-order.success"
+        onFailure:
+          emit: "rollback-order.failed"
+
+      - name: "rollback-payment"
+        command: "rollback-payment.command"
+        dependsOn: "process-payment"
+        onSuccess:
+          emit: "rollback-payment.success"
+        onFailure:
+          emit: "rollback-payment.failed"
+
+      - name: "deactivate-user"
+        command: "deactivate-user.command"
+        dependsOn: "activate-user"
+        onSuccess:
+          emit: "deactivate-user.success"
+        onFailure:
+          emit: "deactivate-user.failed"

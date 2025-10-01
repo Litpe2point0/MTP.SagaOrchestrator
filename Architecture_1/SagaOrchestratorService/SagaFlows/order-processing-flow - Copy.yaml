@@ -1,0 +1,87 @@
+version: "1.0"
+
+flows:
+  user-registration-flow:
+    description: "Flow đăng ký người dùng và gửi email xác nhận"
+    steps:
+      - name: "create-user"
+        command: "user.create.command"
+        fireAndForget:
+          - "audit.log.userCreated"
+          - "analytics.track.userRegistration"
+        onSuccess:
+          next: "send-welcome-email"
+          emit: "user.create.success"
+        onFailure:
+          emit: "user.create.failed"
+          rollback: "user.create.rollback"
+      
+      - name: "send-welcome-email"
+        command: "notification.email.sendWelcome.command"
+        fireAndForget:
+          - "log.emailSentAttempt"
+        onSuccess:
+          emit: "notification.email.sendWelcome.success"
+        onFailure:
+          emit: "notification.email.sendWelcome.failed"
+          rollbackFlow:
+            steps:
+              - name: "rollback-user"
+                command: "user.create.rollback"
+                emit: "user.create.rollback.success"
+
+  order-payment-flow:
+    description: "Flow tạo đơn hàng, trừ tồn kho, thanh toán"
+    steps:
+      - name: "create-order"
+        command: "order.create.command"
+        fireAndForget:
+          - "audit.log.orderCreated"
+          - "notification.push.orderCreated"
+        onSuccess:
+          next: "reserve-inventory"
+          emit: "order.create.success"
+        onFailure:
+          emit: "order.create.failed"
+      
+      - name: "reserve-inventory"
+        command: "inventory.reserve.command"
+        fireAndForget:
+          - "log.inventoryReservationStarted"
+        onSuccess:
+          emit: "inventory.reserve.success"
+        onFailure:
+          emit: "inventory.reserve.failed"
+          rollbackFlow:
+            steps:
+              - name: "rollback-order"
+                command: "order.cancel.command"
+                emit: "order.cancel.success"
+      
+      - name: "notify-reservation"
+        command: "notification.email.inventoryReserved.command"
+        fireAndForget:
+          - "analytics.track.inventoryReserved"
+        onSuccess:
+          next: "process-payment"
+          emit: "notification.email.inventoryReserved.success"
+        onFailure:
+          emit: "notification.email.inventoryReserved.failed"
+      
+      - name: "process-payment"
+        command: "payment.process.command"
+        fireAndForget:
+          - "audit.log.paymentStarted"
+          - "analytics.track.paymentAttempt"
+        onSuccess:
+          emit: "payment.process.success"
+        onFailure:
+          emit: "payment.process.failed"
+          rollbackFlow:
+            steps:
+              - name: "rollback-inventory"
+                command: "inventory.release.command"
+                emit: "inventory.release.success"
+              - name: "rollback-order"
+                command: "order.cancel.command"
+                emit: "order.cancel.success"

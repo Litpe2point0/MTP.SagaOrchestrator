@@ -1,0 +1,68 @@
+### Test User Registration Flow
+POST http://localhost:5000/api/saga/test/user-registration
+Content-Type: application/json
+
+{
+  "userId": "user123",
+  "email": "john.doe@example.com",
+  "username": "johndoe"
+}
+
+###
+
+### Test Order Payment Flow
+POST http://localhost:5000/api/saga/test/order-payment
+Content-Type: application/json
+
+{
+  "userId": "user456",
+  "productId": "product789",
+  "quantity": 2,
+  "amount": 199.99
+}
+
+###
+
+### Start Custom Saga
+POST http://localhost:5000/api/saga/start
+Content-Type: application/json
+
+{
+  "flowName": "user-registration-flow",
+  "initialData": {
+    "userId": "custom-user-001",
+    "email": "custom@example.com",
+    "username": "customuser",
+    "registrationSource": "web"
+  }
+}
+
+###
+
+### Get All Active Sagas
+GET http://localhost:5000/api/saga/active
+
+###
+
+### Get Saga Status (replace with actual sagaId)
+GET http://localhost:5000/api/saga/status/00000000-0000-0000-0000-000000000000
+
+###
+
+### Start Order Payment with Custom Data
+POST http://localhost:5000/api/saga/start
+Content-Type: application/json
+
+{
+  "flowName": "order-payment-flow",
+  "initialData": {
+    "userId": "user789",
+    "productId": "premium-product-001",
+    "quantity": 1,
+    "amount": 299.99,
+    "currency": "USD",
+    "paymentMethod": "credit-card"
+  }
+}
+
+###
